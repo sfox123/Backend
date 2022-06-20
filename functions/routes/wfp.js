@@ -291,7 +291,6 @@ router.post("/wfp/updateHistory", (req, res) => {
   let newArr = [];
   let clone = [];
   try {
-    console.log(list, author)
     list.map(async (x, i) => {
       let foundHistory = await FingerPrint.findById(x._id)
       clone = [...foundHistory.items]
@@ -306,13 +305,50 @@ router.post("/wfp/updateHistory", (req, res) => {
         foundHistory.items = clone
         await foundHistory.save()
       })
-      // await foundHistory.save();
     });
     res.send("success").status(200);
   } catch (error) {
     console.error(error);
   }
 });
+
+router.get("/wfp/tableNew", async (req, res) => {
+  try {
+    const FP = await FingerPrint.find();
+    let tmpArr = []
+    let count = -1;
+    FP.map((x, i) => {
+      const { items, name ,_id} = x;
+      items.map((item, index) => {
+        if (item.pending) { 
+          tmpArr.push({_id,['id']: ++count,['name']:name,['title']: item.title, ['invNumber']: item.invNumber, ['assignedBy']: item.assignedBy, ['gems']: item.gems, ['verified']: item.verified, ['date']: item.date, ['pending']: item.pending })
+        }
+      })
+    })
+    res.send(tmpArr).status(200)
+  } catch (error) {
+    res.send(error).status(404)
+  }
+})
+
+router.get("/wfp/tableLegend", async (req, res) => {
+  try {
+    const FP = await FingerPrint.find();
+    let tmpArr = []
+    let count = -1;
+    FP.map((x, i) => {
+      let { items, name ,_id} = x;
+      items.map((item, index) => {
+        if (!item.pending) {
+          tmpArr.push({_id,['id']: ++count,name,['title']: item.title, ['invNumber']: item.invNumber, ['assignedBy']: item.assignedBy, ['gems']: item.gems, ['verified']: item.verified, ['date']: item.date, ['recievedBy']: item.recievedBy,['recievedDate']:item.recievedDate })
+        }
+      })
+    })
+    res.send(tmpArr).status(200)
+  } catch (error) {
+    res.send(error).status(404)
+  }
+})
 
 router.post("/wfp/changePass", async (req, res) => {
   const { id, newPass } = req.body;
